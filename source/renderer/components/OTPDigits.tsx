@@ -33,7 +33,7 @@ export class OTPDigits extends Component<{
     otpURI: string;
 }> {
     static defaultProps = {
-        otpRef: n => n
+        otpRef: (n) => n
     };
 
     static propTypes = {
@@ -67,31 +67,29 @@ export class OTPDigits extends Component<{
         const rightDigits = this.state.digits.substring(this.state.digits.length / 2);
         return (
             <Container>
-                {this.state.error || typeof this.state.period !== "number" || isNaN(this.state.timeLeft) && (
-                    <Fragment>
-                        <TimeLeftSpinner
-                            intent={Intent.DANGER}
-                            size={30}
-                            value={1}
-                        />
-                        <DigitsContainer>
-                            <Digits>ERROR</Digits>
-                        </DigitsContainer>
-                    </Fragment>
-                ) || (
-                    <Fragment>
-                        <TimeLeftSpinner
-                            intent={this.state.timeLeft > 7 ? Intent.PRIMARY : Intent.DANGER}
-                            size={30}
-                            value={this.state.timeLeft / this.state.period}
-                        />
-                        <DigitsContainer>
-                            <Digits>{leftDigits}</Digits>
-                            &nbsp;
-                            <Digits>{rightDigits}</Digits>
-                        </DigitsContainer>
-                    </Fragment>
-                )}
+                {this.state.error ||
+                    typeof this.state.period !== "number" ||
+                    (isNaN(this.state.timeLeft) && (
+                        <Fragment>
+                            <TimeLeftSpinner intent={Intent.DANGER} size={30} value={1} />
+                            <DigitsContainer>
+                                <Digits>ERROR</Digits>
+                            </DigitsContainer>
+                        </Fragment>
+                    )) || (
+                        <Fragment>
+                            <TimeLeftSpinner
+                                intent={this.state.timeLeft > 7 ? Intent.PRIMARY : Intent.DANGER}
+                                size={30}
+                                value={this.state.timeLeft / this.state.period}
+                            />
+                            <DigitsContainer>
+                                <Digits>{leftDigits}</Digits>
+                                &nbsp;
+                                <Digits>{rightDigits}</Digits>
+                            </DigitsContainer>
+                        </Fragment>
+                    )}
             </Container>
         );
     }
@@ -100,7 +98,12 @@ export class OTPDigits extends Component<{
         let period = this.state.period;
         try {
             if (this.state.otpURI !== props.otpURI) {
-                this.__totp = OTPAuth.URI.parse(props.otpURI);
+                try {
+                    this.__totp = OTPAuth.URI.parse(props.otpURI);
+                } catch (e) {
+                    // Try doing it with secret
+                    this.__totp = new OTPAuth.TOTP({ secret: props.otpURI });
+                }
                 if (this.__totp instanceof OTPAuth.TOTP === false) {
                     throw new Error("Bad OTP");
                 }
